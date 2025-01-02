@@ -79,6 +79,7 @@ export default function FlightSearchForm() {
     }
   };
 
+  // boom;
   return (
     <div className="p-6 border rounded-lg shadow-lg bg-white max-w-md mx-auto">
       <h2 className="text-xl font-semibold mb-4">Search Flights</h2>
