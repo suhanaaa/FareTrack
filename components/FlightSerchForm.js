@@ -70,7 +70,9 @@ export default function FlightSearchForm() {
 
       setError(errorMessage);
       setPrices(null); // Clear previous results
-      toast.error(errorMessage); // Show error message
+
+      // Show error message
+      toast.error(errorMessage);
     } finally {
       // Reset loading state
       setIsLoading(false);
