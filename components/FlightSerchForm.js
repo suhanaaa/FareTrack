@@ -72,7 +72,8 @@ export default function FlightSearchForm() {
       setPrices(null); // Clear previous results
       toast.error(errorMessage); // Show error message
     } finally {
-      setIsLoading(false); // Reset loading state
+      // Reset loading state
+      setIsLoading(false);
     }
   };
 
