@@ -1,0 +1,14 @@
+{
+  "airports": [
+    {
+      "city": "Delhi",
+      "code": "DEL",
+      "name": "Indira Gandhi International Airport"
+    },
+    {
+      "city": "Mumbai",
+      "code": "BOM",
+      "name": "Chhatrapati Shivaji International Airport"
+    }
+  ]
+}
