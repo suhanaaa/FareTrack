@@ -88,29 +88,33 @@ export default function LocationInput({ label, placeholder, value, onChange }) {
   );
 
   return (
-    <div className="mb-4 relative" ref={wrapperRef}>
-      <label className="block text-sm font-medium mb-2">{label}</label>
+    <div className="relative" ref={wrapperRef}>
+      <label className="block text-sm font-medium text-gray-300 mb-2">
+        {label}
+      </label>
       <input
         type="text"
         placeholder={placeholder}
-        className="w-full px-4 py-2 border border-gray-300 rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-purple-500"
+        className="w-full px-4 py-2 bg-gray-700 text-white border border-gray-600 rounded-lg 
+                 focus:ring-2 focus:ring-purple-500 focus:border-transparent
+                 placeholder-gray-400"
         value={searchTerm}
         onChange={handleInputChange}
         onFocus={() => setShowSuggestions(true)}
       />
 
       {showSuggestions && filteredAirports.length > 0 && (
-        <ul className="absolute z-50 w-full bg-white mt-1 border border-gray-300 rounded-lg shadow-lg max-h-60 overflow-y-auto">
+        <ul className="absolute z-50 w-full mt-1 bg-gray-700 border border-gray-600 rounded-lg shadow-xl max-h-60 overflow-y-auto">
           {filteredAirports.map((airport) => (
             <li
               key={airport.code}
-              className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
+              className="px-4 py-2 hover:bg-gray-600 cursor-pointer transition-colors duration-150"
               onClick={() => handleAirportSelect(airport)}
             >
-              <div className="font-medium text-gray-500">
+              <div className="text-white font-medium">
                 {airport.city}, {airport.state} ({airport.iata || airport.icao})
               </div>
-              <div className="text-sm text-gray-600">{airport.name}</div>
+              <div className="text-sm text-gray-400">{airport.name}</div>
             </li>
           ))}
         </ul>

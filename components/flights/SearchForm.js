@@ -1,137 +1,3 @@
-// "use client";
-// import { useState } from "react";
-// import axios from "axios";
-// import toast from "react-hot-toast";
-// import { useRouter } from "next/navigation";
-// import TripTypeSelect from "./TripTypeSelect";
-// import LocationInput from "./LocationInput";
-// import DateInput from "./DateInput";
-// import FlightResults from "./FlightResults";
-
-// export default function SearchForm() {
-//   const router = useRouter();
-//   const [isLoading, setIsLoading] = useState(false);
-//   const [tripType, setTripType] = useState("oneway");
-//   const [fromLocation, setFromLocation] = useState("");
-//   const [toLocation, setToLocation] = useState("");
-//   const [startDate, setStartDate] = useState("");
-//   const [endDate, setEndDate] = useState("");
-//   const [prices, setPrices] = useState(null);
-//   const [error, setError] = useState("");
-
-//   const handleSubmit = async (event) => {
-//     event.preventDefault();
-
-//     // Validate inputs
-//     if (
-//       !fromLocation ||
-//       !toLocation ||
-//       !startDate ||
-//       (tripType === "roundtrip" && !endDate)
-//     ) {
-//       toast.error("Please fill in all required fields");
-//       return;
-//     }
-
-//     if (isLoading) return;
-//     setIsLoading(true);
-//     setError("");
-//     setPrices(null);
-
-//     try {
-//       const requestData = {
-//         tripType,
-//         fromLocation, // This will be the airport code
-//         toLocation, // This will be the airport code
-//         startDate,
-//         endDate: tripType === "roundtrip" ? endDate : null,
-//       };
-
-//       const response = await axios.post("/api/flight-search", requestData);
-
-//       if (response.status === 200 && response.data.prices?.body?.fares) {
-//         setPrices(response.data.prices);
-//         toast.success("Flights found!");
-//       } else {
-//         throw new Error("Invalid response format");
-//       }
-
-//       router.refresh();
-//     } catch (error) {
-//       const errorMessage =
-//         error.response?.data?.error ||
-//         error.message ||
-//         "No flights found for this route";
-
-//       setError(errorMessage);
-//       setPrices(null);
-//       toast.error(errorMessage);
-//     } finally {
-//       setIsLoading(false);
-//     }
-//   };
-
-//   return (
-//     <section className="max-w-5xl mx-auto px-5 flex flex-col md:flex-row md:items-start gap-8 pb-12">
-//       <div className="bg-base-100 p-8 rounded-3xl space-y-8 max-w-md mx-auto">
-//         <h2 className="text-xl font-semibold mb-4 text-center">
-//           Search Flights
-//         </h2>
-
-//         <TripTypeSelect value={tripType} onChange={setTripType} />
-
-//         <LocationInput
-//           label="From"
-//           placeholder="Enter city or airport code"
-//           value={fromLocation}
-//           onChange={setFromLocation}
-//         />
-
-//         <LocationInput
-//           label="To"
-//           placeholder="Enter city or airport code"
-//           value={toLocation}
-//           onChange={setToLocation}
-//         />
-
-//         <DateInput
-//           label="Departure Date"
-//           value={startDate}
-//           onChange={setStartDate}
-//         />
-
-//         {tripType === "roundtrip" && (
-//           <DateInput
-//             label="Return Date"
-//             value={endDate}
-//             onChange={setEndDate}
-//           />
-//         )}
-
-//         <button
-//           className="w-full px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-800 disabled:bg-purple-300 transition duration-200"
-//           onClick={handleSubmit}
-//           disabled={isLoading}
-//         >
-//           {isLoading ? "Searching..." : "Search Flights"}
-//         </button>
-
-//         {error && <div className="text-red-600 mt-4">{error}</div>}
-//       </div>
-//       <div className="space-y-4 flex-grow">
-//         {prices?.body?.fares && (
-//           <FlightResults
-//             prices={prices}
-//             tripType={tripType}
-//             fromLocation={fromLocation}
-//             toLocation={toLocation}
-//           />
-//         )}
-//       </div>
-//     </section>
-//   );
-// }
-
 "use client";
 
 import { useState } from "react";
@@ -156,96 +22,123 @@ export default function SearchForm() {
 
   const handleSubmit = async (event) => {
     event.preventDefault();
-
-    if (isLoading) return;
     setIsLoading(true);
     setError("");
     setPrices(null);
 
     try {
-      const requestData = {
-        tripType,
+      // Log the request data
+      console.log("Request Data:", {
         fromLocation,
         toLocation,
         startDate,
-        endDate: tripType === "roundtrip" ? endDate : null,
-      };
+        endDate,
+        tripType,
+      });
 
-      const response = await axios.post("/api/flight-search", requestData);
+      const response = await axios.post("/api/flight-search", {
+        fromLocation,
+        toLocation,
+        startDate,
+        endDate,
+        tripType,
+      });
 
-      if (response.status === 200 && response.data.prices?.body?.fares) {
-        setPrices(response.data.prices);
+      // Log the full response
+      console.log("API Response:", response.data);
+
+      if (response.data?.prices?.body?.fares) {
+        const flightData = {
+          body: {
+            fares: response.data.prices.body.fares,
+          },
+        };
+
+        console.log("Setting prices state:", flightData);
+        setPrices(flightData);
         toast.success("Flights found!");
       } else {
-        throw new Error("Invalid response format");
+        setError("No flights found for this route");
       }
-
-      router.refresh();
     } catch (error) {
-      const errorMessage =
-        error.response?.data?.error ||
-        error.message ||
-        "No flights found for this route";
+      console.error("Search error details:", {
+        message: error.message,
+        response: error.response,
+        data: error.response?.data,
+      });
 
-      setError(errorMessage);
-      setPrices(null);
-      toast.error(errorMessage);
+      // More specific error messages
+      if (error.response?.status === 404) {
+        setError("No flights found for this route");
+      } else if (error.response?.status === 400) {
+        setError("Please check your search criteria");
+      } else {
+        setError("Unable to search flights. Please try again later.");
+      }
     } finally {
       setIsLoading(false);
     }
   };
 
   return (
-    <div className="flex flex-row h-screen">
-      {/* Fixed Search Form */}
-      <div className="bg-base-100 p-8 rounded-3xl space-y-8 max-w-md mx-auto">
-        <h2 className="text-xl font-semibold mb-4 text-center">
-          Search Flights
-        </h2>
+    <div className="flex flex-col lg:flex-row w-full gap-8">
+      {/* Search Form */}
+      <div className="w-full lg:w-1/3">
+        <div className="bg-gray-800 rounded-xl shadow-xl p-6 sticky top-24">
+          <h2 className="text-2xl font-bold text-white mb-6">
+            Find Your Flight
+          </h2>
 
-        <TripTypeSelect value={tripType} onChange={setTripType} />
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <TripTypeSelect value={tripType} onChange={setTripType} />
 
-        <LocationInput
-          label="From"
-          placeholder="Enter city or airport code"
-          value={fromLocation}
-          onChange={setFromLocation}
-        />
+            <LocationInput
+              label="From"
+              placeholder="Enter city or airport"
+              value={fromLocation}
+              onChange={setFromLocation}
+            />
 
-        <LocationInput
-          label="To"
-          placeholder="Enter city or airport code"
-          value={toLocation}
-          onChange={setToLocation}
-        />
+            <LocationInput
+              label="To"
+              placeholder="Enter city or airport"
+              value={toLocation}
+              onChange={setToLocation}
+            />
 
-        <DateInput
-          label="Departure Date"
-          value={startDate}
-          onChange={setStartDate}
-        />
+            <DateInput
+              label="Departure Date"
+              value={startDate}
+              onChange={setStartDate}
+            />
 
-        {tripType === "roundtrip" && (
-          <DateInput
-            label="Return Date"
-            value={endDate}
-            onChange={setEndDate}
-          />
-        )}
+            {tripType === "roundtrip" && (
+              <DateInput
+                label="Return Date"
+                value={endDate}
+                onChange={setEndDate}
+              />
+            )}
 
-        <button
-          className="w-full px-4 py-2 text-white bg-purple-600 rounded-lg hover:bg-purple-800 disabled:bg-purple-300 transition duration-200"
-          onClick={handleSubmit}
-          disabled={isLoading}
-        >
-          {isLoading ? "Searching..." : "Search Flights"}
-        </button>
+            <button
+              type="submit"
+              disabled={isLoading}
+              className="w-full py-3 px-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white rounded-lg font-medium hover:from-purple-700 hover:to-pink-700 transition-all duration-200 disabled:opacity-50"
+            >
+              {isLoading ? "Searching..." : "Search Flights"}
+            </button>
+          </form>
 
-        {error && <div className="text-red-600 mt-4">{error}</div>}
+          {error && (
+            <div className="mt-4 p-4 bg-red-500/10 border border-red-500 rounded-lg text-red-500">
+              {error}
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Scrollable Results Area */}
-      <div className="flex-grow overflow-y-auto p-4 ">
+      {/* Results Area */}
+      <div className="w-full lg:w-2/3">
         {prices?.body?.fares && (
           <FlightResults
             prices={prices}
