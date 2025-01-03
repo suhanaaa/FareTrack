@@ -24,12 +24,12 @@ const searchSchema = new mongoose.Schema({
 
   endDate: {
     type: Date,
-  }, // Optional, only for round trips
+  },
 
   searchedAt: {
     type: Date,
     default: Date.now,
-  }, // Automatically logs when the search is made
+  },
 
   userId: {
     type: mongoose.Schema.Types.ObjectId,
