@@ -107,7 +107,7 @@ export default function LocationInput({ label, placeholder, value, onChange }) {
               className="px-4 py-2 hover:bg-gray-100 cursor-pointer"
               onClick={() => handleAirportSelect(airport)}
             >
-              <div className="font-medium">
+              <div className="font-medium text-gray-500">
                 {airport.city}, {airport.state} ({airport.iata || airport.icao})
               </div>
               <div className="text-sm text-gray-600">{airport.name}</div>

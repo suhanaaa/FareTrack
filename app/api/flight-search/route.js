@@ -68,9 +68,9 @@ export async function POST(req) {
 
     return NextResponse.json({ sucess: true, prices }, { status: 200 });
   } catch (error) {
-    console.error(error);
+    console.error("Error details:", error); // Log the error details
     return NextResponse.json(
-      { error: "Internal Server Eroor" },
+      { error: "Internal Server Error", details: error.message }, // Include error details for debugging
       { status: 500 }
     );
   }
