@@ -136,10 +136,10 @@ import { useState } from "react";
 import axios from "axios";
 import toast from "react-hot-toast";
 import { useRouter } from "next/navigation";
-import FlightResults from "./FlightResults"; // Ensure this import is correct
-import TripTypeSelect from "./TripTypeSelect"; // Ensure this import is correct
-import LocationInput from "./LocationInput"; // Ensure this import is correct
-import DateInput from "./DateInput"; // Ensure this import is correct
+import FlightResults from "./FlightResults";
+import TripTypeSelect from "./TripTypeSelect";
+import LocationInput from "./LocationInput";
+import DateInput from "./DateInput";
 
 export default function SearchForm() {
   const router = useRouter();
