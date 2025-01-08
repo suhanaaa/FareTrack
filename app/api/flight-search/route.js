@@ -63,24 +63,11 @@ export async function POST(req) {
     //     ? `https://travel.paytm.com/api/a/flights/v1/get_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&class=E&adults=1&client=web`
     //     : `https://travel.paytm.com/api/a/flights/v1/get_roundtrip_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&end_date=${endDate}&class=E&adults=1&client=web`;
 
-    const baseUrl = "https://travel.paytm.com/api/a/flights/v1";
-
-    const apiUrl = new URL(
-      tripType === "oneway" ? "/get_fares" : "/get_roundtrip_fares",
-      baseUrl
-    );
-
-    // Add query parameters
-    apiUrl.searchParams.append("source", fromLocation);
-    apiUrl.searchParams.append("destination", toLocation);
-    apiUrl.searchParams.append("start_date", startDate);
-    apiUrl.searchParams.append("class", "E");
-    apiUrl.searchParams.append("adults", "1");
-    apiUrl.searchParams.append("client", "web");
-
-    if (tripType === "roundtrip" && endDate) {
-      apiUrl.searchParams.append("end_date", endDate);
-    }
+    // Build the URL for the Paytm API based on trip type (oneway or roundtrip)
+    const apiUrl =
+      tripType === "oneway"
+        ? `https://flightsapi.shinealom.workers.dev/api/a/flights/v1/get_roundtrip_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&class=E&adults=1&client=web`
+        : `https://flightsapi.shinealom.workers.dev/api/a/flights/v1/get_roundtrip_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&end_date=${endDate}&class=E&adults=1&client=web`;
 
     const response = await fetch(apiUrl);
     const prices = await response.json();
