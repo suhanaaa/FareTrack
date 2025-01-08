@@ -20,66 +20,6 @@ export default function SearchForm() {
   const [prices, setPrices] = useState(null);
   const [error, setError] = useState("");
 
-  // const handleSubmit = async (event) => {
-  //   event.preventDefault();
-  //   setIsLoading(true);
-  //   setError("");
-  //   setPrices(null);
-
-  //   try {
-  //     // Log the request data
-  //     console.log("Request Data:", {
-  //       fromLocation,
-  //       toLocation,
-  //       startDate,
-  //       endDate,
-  //       tripType,
-  //     });
-
-  //     const response = await axios.post("/api/flight-search", {
-  //       fromLocation,
-  //       toLocation,
-  //       startDate,
-  //       endDate,
-  //       tripType,
-  //     });
-
-  //     // Log the full response
-  //     console.log("API Response:", response.data);
-
-  //     if (response.data?.prices?.body?.fares) {
-  //       const flightData = {
-  //         body: {
-  //           fares: response.data.prices.body.fares,
-  //         },
-  //       };
-
-  //       console.log("Setting prices state:", flightData);
-  //       setPrices(flightData);
-  //       toast.success("Flights found!");
-  //     } else {
-  //       setError("No flights found for this route");
-  //     }
-  //   } catch (error) {
-  //     console.error("Search error details:", {
-  //       message: error.message,
-  //       response: error.response,
-  //       data: error.response?.data,
-  //     });
-
-  //     // More specific error messages
-  //     if (error.response?.status === 404) {
-  //       setError("No flights found for this route");
-  //     } else if (error.response?.status === 400) {
-  //       setError("Please check your search criteria");
-  //     } else {
-  //       setError("Unable to search flights. Please try again later.");
-  //     }
-  //   } finally {
-  //     setIsLoading(false);
-  //   }
-  // };
-
   const handleSubmit = async (event) => {
     event.preventDefault();
     setIsLoading(true);
@@ -87,36 +27,54 @@ export default function SearchForm() {
     setPrices(null);
 
     try {
-      const requestData = {
-        tripType,
+      // Log the request data
+      console.log("Request Data:", {
         fromLocation,
         toLocation,
         startDate,
-        endDate: tripType === "roundtrip" ? endDate : "",
-      };
-
-      console.log("Making request with data:", requestData);
-
-      const response = await axios.post("/api/flight-search", requestData, {
-        headers: {
-          "Content-Type": "application/json",
-          "Cache-Control": "no-cache",
-          Pragma: "no-cache",
-        },
+        endDate,
+        tripType,
       });
 
+      const response = await axios.post("/api/flight-search", {
+        fromLocation,
+        toLocation,
+        startDate,
+        endDate,
+        tripType,
+      });
+
+      // Log the full response
+      console.log("API Response:", response.data);
+
       if (response.data?.prices?.body?.fares) {
-        setPrices(response.data.prices);
+        const flightData = {
+          body: {
+            fares: response.data.prices.body.fares,
+          },
+        };
+
+        console.log("Setting prices state:", flightData);
+        setPrices(flightData);
         toast.success("Flights found!");
       } else {
-        throw new Error("Invalid response format");
+        setError("No flights found for this route");
       }
     } catch (error) {
-      console.error("Search error:", error);
-      setError(
-        error.response?.data?.error ||
-          "Unable to search flights. Please try again later."
-      );
+      console.error("Search error details:", {
+        message: error.message,
+        response: error.response,
+        data: error.response?.data,
+      });
+
+      // More specific error messages
+      if (error.response?.status === 404) {
+        setError("No flights found for this route");
+      } else if (error.response?.status === 400) {
+        setError("Please check your search criteria");
+      } else {
+        setError("Unable to search flights. Please try again later.");
+      }
     } finally {
       setIsLoading(false);
     }
