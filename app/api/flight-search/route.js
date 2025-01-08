@@ -117,6 +117,8 @@ export async function POST(req) {
             endDate
           )}&class=E&adults=1&client=web`;
 
+    console.log("Fetching from URL:", apiUrl);
+
     // Make the request with proxy headers
     const response = await fetch(apiUrl, {
       method: "GET",
@@ -135,7 +137,6 @@ export async function POST(req) {
     }
 
     const prices = await response.json();
-
     return NextResponse.json({ success: true, prices });
   } catch (error) {
     console.error("API Error:", error);
