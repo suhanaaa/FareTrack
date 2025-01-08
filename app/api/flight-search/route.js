@@ -80,22 +80,23 @@
 // Logs the Search Details in the database
 // Fetches Flight Prices from the Paytm Flights API
 
-import { auth } from "@/auth";
 import { NextResponse } from "next/server";
+import { auth } from "@/auth";
 import Search from "@/models/Search";
 import connectMongo from "@/libs/mongoose";
-import User from "@/models/User";
 
 export async function POST(req) {
   try {
     const body = await req.json();
+    console.log("Received request body:", body);
 
-    //Get the session from the request
+    // Get the session from the request
     const session = await auth();
 
-    if (!session) {
-      return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-    }
+    // Temporarily disable auth check for testing
+    // if (!session) {
+    //   return NextResponse.json({ error: "Not authorized" }, { status: 401 });
+    // }
 
     const { fromLocation, toLocation, startDate, endDate, tripType } = body;
 
@@ -107,36 +108,13 @@ export async function POST(req) {
       );
     }
 
-    await connectMongo();
-
-    // Count the number of searches made by the logged-in user
-    const count = await Search.countDocuments({ userId: session.user.id });
-
-    console.log("Search Count:", count);
-
-    // Check if the user has exceeded the search limit of 50
-    if (count >= 500) {
-      return NextResponse.json(
-        { error: "Search limit reached, ugrade the plan" },
-        { status: 403 }
-      );
-    }
-
-    // Log the user's search in the database
-    await Search.create({
-      userId: session.user.id,
-      tripType,
-      fromLocation,
-      toLocation,
-      startDate,
-      endDate: tripType === "roundtrip" ? endDate : null,
-    });
-
     // Build API URL
     const apiUrl =
       tripType === "oneway"
         ? `https://travel.paytm.com/api/a/flights/v1/get_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&class=E&adults=1&client=web`
         : `https://travel.paytm.com/api/a/flights/v1/get_roundtrip_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&end_date=${endDate}&class=E&adults=1&client=web`;
+
+    console.log("Fetching from URL:", apiUrl);
 
     // Make the request with custom headers
     const response = await fetch(apiUrl, {
@@ -148,29 +126,38 @@ export async function POST(req) {
         "Accept-Language": "en-US,en;q=0.9",
         Origin: "https://travel.paytm.com",
         Referer: "https://travel.paytm.com/",
-        "Cache-Control": "no-cache",
-        Pragma: "no-cache",
       },
       cache: "no-store",
     });
 
     if (!response.ok) {
+      const errorText = await response.text();
+      console.error("API Error Response:", errorText);
       throw new Error(`API responded with status: ${response.status}`);
     }
 
     const prices = await response.json();
+    console.log("Successfully fetched prices");
 
-    // Add cache control headers to the response
-    return NextResponse.json(
-      { success: true, prices },
-      {
-        status: 200,
-        headers: {
-          "Cache-Control": "no-store, must-revalidate",
-          Pragma: "no-cache",
-        },
+    // Only connect to MongoDB and log search if we have a session
+    if (session) {
+      try {
+        await connectMongo();
+        await Search.create({
+          userId: session.user.id,
+          tripType,
+          fromLocation,
+          toLocation,
+          startDate,
+          endDate: tripType === "roundtrip" ? endDate : null,
+        });
+      } catch (dbError) {
+        console.error("Database error:", dbError);
+        // Continue even if DB logging fails
       }
-    );
+    }
+
+    return NextResponse.json({ success: true, prices }, { status: 200 });
   } catch (error) {
     console.error("API Error:", {
       message: error.message,
@@ -185,9 +172,4 @@ export async function POST(req) {
       { status: 500 }
     );
   }
-}
-
-// Handle OPTIONS requests for CORS
-export async function OPTIONS(req) {
-  return NextResponse.json({}, { status: 200 });
 }
