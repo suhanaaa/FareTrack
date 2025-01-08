@@ -81,22 +81,11 @@
 // Fetches Flight Prices from the Paytm Flights API
 
 import { NextResponse } from "next/server";
-import { auth } from "@/auth";
-import Search from "@/models/Search";
-import connectMongo from "@/libs/mongoose";
 
 export async function POST(req) {
   try {
     const body = await req.json();
     console.log("Received request body:", body);
-
-    // Get the session from the request
-    const session = await auth();
-
-    // Temporarily disable auth check for testing
-    // if (!session) {
-    //   return NextResponse.json({ error: "Not authorized" }, { status: 401 });
-    // }
 
     const { fromLocation, toLocation, startDate, endDate, tripType } = body;
 
@@ -108,15 +97,27 @@ export async function POST(req) {
       );
     }
 
-    // Build API URL
+    // Build API URL with proper encoding
     const apiUrl =
       tripType === "oneway"
-        ? `https://travel.paytm.com/api/a/flights/v1/get_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&class=E&adults=1&client=web`
-        : `https://travel.paytm.com/api/a/flights/v1/get_roundtrip_fares?source=${fromLocation}&destination=${toLocation}&start_date=${startDate}&end_date=${endDate}&class=E&adults=1&client=web`;
+        ? `https://travel.paytm.com/api/a/flights/v1/get_fares?source=${encodeURIComponent(
+            fromLocation
+          )}&destination=${encodeURIComponent(
+            toLocation
+          )}&start_date=${encodeURIComponent(
+            startDate
+          )}&class=E&adults=1&client=web`
+        : `https://travel.paytm.com/api/a/flights/v1/get_roundtrip_fares?source=${encodeURIComponent(
+            fromLocation
+          )}&destination=${encodeURIComponent(
+            toLocation
+          )}&start_date=${encodeURIComponent(
+            startDate
+          )}&end_date=${encodeURIComponent(
+            endDate
+          )}&class=E&adults=1&client=web`;
 
-    console.log("Fetching from URL:", apiUrl);
-
-    // Make the request with custom headers
+    // Make the request with proxy headers
     const response = await fetch(apiUrl, {
       method: "GET",
       headers: {
@@ -127,47 +128,23 @@ export async function POST(req) {
         Origin: "https://travel.paytm.com",
         Referer: "https://travel.paytm.com/",
       },
-      cache: "no-store",
     });
 
     if (!response.ok) {
-      const errorText = await response.text();
-      console.error("API Error Response:", errorText);
       throw new Error(`API responded with status: ${response.status}`);
     }
 
     const prices = await response.json();
-    console.log("Successfully fetched prices");
 
-    // Only connect to MongoDB and log search if we have a session
-    if (session) {
-      try {
-        await connectMongo();
-        await Search.create({
-          userId: session.user.id,
-          tripType,
-          fromLocation,
-          toLocation,
-          startDate,
-          endDate: tripType === "roundtrip" ? endDate : null,
-        });
-      } catch (dbError) {
-        console.error("Database error:", dbError);
-        // Continue even if DB logging fails
-      }
-    }
-
-    return NextResponse.json({ success: true, prices }, { status: 200 });
+    return NextResponse.json({ success: true, prices });
   } catch (error) {
-    console.error("API Error:", {
-      message: error.message,
-      stack: error.stack,
-    });
+    console.error("API Error:", error);
 
     return NextResponse.json(
       {
         error: "Unable to fetch flight data",
         details: error.message,
+        requestInfo: req.url,
       },
       { status: 500 }
     );
